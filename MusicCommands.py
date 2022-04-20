@@ -1,16 +1,16 @@
+import asyncio
 import json
 import os
-import urllib
 import re
+import urllib
+from queue import Queue
 from urllib import parse
 
 import discord
 import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-from discord.ext import commands, tasks
-import asyncio
 import youtube_dl
-from queue import Queue
+from discord.ext import commands, tasks
+from spotipy.oauth2 import SpotifyClientCredentials
 
 # Spotify Variables
 client_id = "384291e4cdab4faea3f4517b61a89eb5"

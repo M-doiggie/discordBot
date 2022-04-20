@@ -1,16 +1,18 @@
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
+from os.path import exists
 
 import TimeKeeperCommands
-from os.path import exists
 
 today = datetime.today().strftime("%d/%m/%Y")
 yesterday = datetime.today() - timedelta(days=1)
 yesterday = yesterday.strftime("%d/%m/%Y")
 
+
 def tear_down():
     if exists("meetingOutput.txt"):
         os.remove("meetingOutput.txt")
+
 
 def test_write_to_file():
     commands = TimeKeeperCommands.TimeKeepCommands()

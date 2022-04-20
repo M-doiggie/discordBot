@@ -6,7 +6,7 @@ from mcstatus import MinecraftServer
 
 class MiscCommands(commands.Cog):
 
-    #Pings a minecraft server and tells you if it is up and how many people are online
+    # Pings a minecraft server and tells you if it is up and how many people are online
     @commands.command(name="status", help="Tells you the status of the minecraft server...if it is still alive")
     async def sendMCServerStatus(self, ctx):
         await ctx.channel.send("This might take a minute.")

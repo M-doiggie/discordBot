@@ -1,20 +1,20 @@
 import datetime
+import json
 import os
 
 import discord
 from discord.ext import commands
-import json
 
 
 class TimeKeepCommands(commands.Cog):
     jsonStructure = []
-    filename = "meetingOutput.txt"
+    filename = os.getenv("meeting_filename", "meetingOutput.txt")
 
     @commands.command(name='meeting', help='Tells the bot to join the voice channel')
     async def add_meeting(self, ctx, *, user_input):
         dateReferenceSplit = self.split_meeting_input(user_input)
         enteredDate = {"Date": dateReferenceSplit[0],
-                "Reference": dateReferenceSplit[1]}
+                       "Reference": dateReferenceSplit[1]}
         print(user_input)
         print(enteredDate)
         self.jsonStructure.append(enteredDate)

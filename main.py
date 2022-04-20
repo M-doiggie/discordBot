@@ -1,19 +1,20 @@
-import MiscCommands
-import MusicCommands
 from datetime import datetime
+
 import discord
 from discord.ext import commands
 
-# Auth Variables
-# Mr botty token
-#DISCORD_TOKEN = "ODE4NTYzNjQyMzcwNTU1OTM1.YEZ4zA.jP_pHO6v8rKcECr4hmVYfdbSM0E"
-# test token
+import MiscCommands
+import MusicCommands
 import TimeKeeperCommands
 
+# Auth Variables
+# Mr botty token
+# DISCORD_TOKEN = "ODE4NTYzNjQyMzcwNTU1OTM1.YEZ4zA.jP_pHO6v8rKcECr4hmVYfdbSM0E"
+# test token
 DISCORD_TOKEN = "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM"
 
-#used to retirve token from environment, allows for docker to have multipe bot instances for multiple server if required
-#DISCORD_TOKEN = os.getenv("discord_token")
+# used to retirve token from environment, allows for docker to have multipe bot instances for multiple server if required
+# DISCORD_TOKEN = os.getenv("discord_token", OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM)
 
 birdy_uri = ''
 
