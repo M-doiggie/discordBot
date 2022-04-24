@@ -214,8 +214,9 @@ class MusicCommands(commands.Cog):
             if not await Downloader.download_music(url):
                 if ctx is not None:
                     failedDownloadEmbed = discord.Embed(title="Failed Song")
-
-                    await ctx.send("Song: " + url + " was not able to be downloaded.")
+                    failedDownloadEmbed.url = url
+                    failedDownloadEmbed.description = "Failed to download due to Youtube"
+                    await ctx.send(embed=failedDownloadEmbed)
                 print("File not able to be downloaded: " + url, flush=True)
                 self.check_downloads(ctx)
             else:
