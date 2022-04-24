@@ -54,7 +54,7 @@ class MusicCommands(commands.Cog):
         try:
             await channel.connect()
             self.check_music.start(ctx)
-            self.check_downloads.start()
+            self.check_downloads.start(ctx)
             print("Successfully joined: ", channel, flush=True)
         except Exception as e:
             await ctx.send("Bot unable to connect to " + str(channel))
@@ -207,13 +207,19 @@ class MusicCommands(commands.Cog):
 
     # A method which is called every 3 seconds, to check if a song needs to be downloaded
     @tasks.loop(seconds=3)
-    async def check_downloads(self):
+    async def check_downloads(self, ctx):
         if not toDownloadList.empty():
             url = toDownloadList.get()
             print("Trying to download url: " + url, flush=True)
-            await Downloader.download_music(url)
-            toPlayList.put(url)
-            print("File downloaded: " + url, flush=True)
+            if not await Downloader.download_music(url):
+                if ctx is not None:
+                    failedDownloadEmbed = discord.Embed(title="Failed Song")
+
+                    await ctx.send("Song: " + url + " was not able to be downloaded.")
+                print("File not able to be downloaded: " + url, flush=True)
+                self.check_downloads(ctx)
+            else:
+                print("File downloaded: " + url, flush=True)
         else:
             pass
         # disabled as this fills the logs
@@ -249,5 +255,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
 # Used to download music. Url not required, just a String of a song name.
 class Downloader:
     async def download_music(url):
-        filename = await YTDLSource.from_url(url)
-        toPlayList.put(filename)
+        try:
+            filename = await YTDLSource.from_url(url)
+            toPlayList.put(filename)
+            return True
+        except:
+            return False
