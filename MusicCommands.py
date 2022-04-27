@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import re
@@ -8,32 +7,17 @@ from urllib import parse
 
 import discord
 import spotipy
-import youtube_dl
 from discord.ext import commands, tasks
 from spotipy.oauth2 import SpotifyClientCredentials
 
 # Spotify Variables
+from Downloader import Downloader
+
 client_id = "384291e4cdab4faea3f4517b61a89eb5"
 client_secret = "0457b50cefe449998af10aa8707be247"
 redirect_uri = 'http://127.0.0.1:9090'
 scope = "user-top-read"
-sp = spotipy.Spotify(
-    client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
-
-youtube_dl.utils.bug_reports_message = lambda: ''
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
 
 toDownloadList = Queue(maxsize=0)
 toPlayList = Queue(maxsize=0)
@@ -234,31 +218,3 @@ class MusicCommands(commands.Cog):
             os.remove(filename)
         except OSError as OSE:
             print("File deleted: ", filename, flush=True)
-
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get('title')
-        self.url = ""
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        if 'entries' in data:
-            data = data['entries'][0]
-        filename = data['title'] if stream else ytdl.prepare_filename(data)
-        return filename
-
-
-# Used to download music. Url not required, just a String of a song name.
-class Downloader:
-    async def download_music(url):
-        try:
-            filename = await YTDLSource.from_url(url)
-            toPlayList.put(filename)
-            return True
-        except:
-            return False

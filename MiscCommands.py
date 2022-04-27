@@ -1,8 +1,10 @@
 import random
 
+import discord
 from discord.ext import commands
 from mcstatus import MinecraftServer
 
+cum_img_url = "https://external-preview.redd.it/tXkvYCJzK9Gs9FXmNqFhCaUynmldrVdu2k_K0BpHv4I.jpg?auto=webp&s=907bbf6d1677a6e18c738e962998330fc36745ca"
 
 class MiscCommands(commands.Cog):
 
@@ -23,3 +25,10 @@ class MiscCommands(commands.Cog):
             await ctx.channel.send("Heads!")
         else:
             await ctx.channel.send("Tails!")
+
+    @commands.command(name="cum", help="Silence wench, I do not wish to be horny anymore")
+    async def sendCum(self, ctx):
+        embedMessage = discord.Embed(title="Silence Wench")
+        embedMessage.description = "I do not wish to be horny anymore."
+        embedMessage.set_image(url=cum_img_url)
+        await ctx.channel.send(embed=embedMessage)
