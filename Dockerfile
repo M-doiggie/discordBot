@@ -14,8 +14,6 @@ RUN pip3 install youtube_dl
 RUN pip3 install python-dotenv 
 RUN pip3 install PyNaCl
 RUN pip3 install bs4
-COPY ../../../../Users/micha/Downloads/MusicBot_V2/MusicBot/venv /venv
-COPY ../../../../Users/micha/Downloads/MusicBot_V2/MusicBot/main.py /
 ENV SONG_CHECK_TIMER=1
 ENV AUTO_LEAVE_TIMER=10
 ENV LOG_LEVEL = "WARNING"
