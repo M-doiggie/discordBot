@@ -1,9 +1,12 @@
 import datetime
 import json
 import os
+import logging
 
 import discord
 from discord.ext import commands
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TimeKeepCommands(commands.Cog):
@@ -15,19 +18,15 @@ class TimeKeepCommands(commands.Cog):
         dateReferenceSplit = self.split_meeting_input(user_input)
         enteredDate = {"Date": dateReferenceSplit[0],
                        "Reference": dateReferenceSplit[1]}
-        print(user_input)
-        print(enteredDate)
         self.jsonStructure.append(enteredDate)
-        print("join")
-
-    @add_meeting.after_invoke
-    async def after_sort(self, ctx):
+        LOGGER.warning("A Meeting was added on: '{0}'".format(enteredDate))
         self.sort_json()
 
     def sort_json(self):
         newlist = sorted(self.jsonStructure, key=lambda d: d["Date"])
         self.jsonStructure = newlist
         self.write_to_file()
+        LOGGER.info("Json Sorted: '{0}'".format(self.jsonStructure))
 
     @commands.command(name='calendar', help='Prints out all of the upcoming meetings')
     async def list_meetings(self, ctx):
@@ -43,24 +42,22 @@ class TimeKeepCommands(commands.Cog):
     @commands.command(name='inRange', help='Prints all of the meetings between dates entered')
     async def in_range(self, startDate, endDate):
         # print queue of meetings in range
-        print("Print a queue of meetings")
+        LOGGER.error("in_range not yet implemented.")
 
     def write_to_file(self):
         with open(self.filename, 'w') as file:
             file.write(json.dumps(self.jsonStructure, indent=4, default=str))
-        print("Wrote to " + self.filename)
+        LOGGER.info("The json was written to file: '{0}'".format(self.filename))
         return self.filename
 
     def read_from_file(self):
-        print("Start of read")
         self.jsonStructure = []
         file = open(self.filename)
         data = json.load(file)
         for i in range(len(data)):
             self.jsonStructure.append(data[i])
         file.close()
-        print(self.jsonStructure)
-        print("End of read")
+        LOGGER.info("Json was read from file. Json: '{0}'".format(self.jsonStructure))
 
     def split_meeting_input(self, user_input):
         return str(user_input).split(" ")

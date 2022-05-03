@@ -49,4 +49,3 @@ if __name__ == '__main__':
     test_sort_json()
     test_read_from_file()
     tear_down()
-    print("All good")

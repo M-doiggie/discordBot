@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 import discord
 from discord.ext import commands
@@ -21,6 +22,7 @@ birdy_uri = ''
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
 theBot = commands.Bot(command_prefix='!', intents=intents)
+LOGGER = logging.getLogger(__name__)
 
 # Start and run of bot
 theBot.add_cog(MusicCommands.MusicCommands())
@@ -28,5 +30,5 @@ theBot.add_cog(MiscCommands.MiscCommands())
 theBot.add_cog(TimeKeeperCommands.TimeKeepCommands())
 
 if __name__ == "__main__":
-    print("Bot started up at: ", datetime.now(), flush=True)
+    LOGGER.warning("Bot started up at: '{0}'".format(str(datetime.now())))
     theBot.run(DISCORD_TOKEN)

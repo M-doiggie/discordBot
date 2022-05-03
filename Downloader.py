@@ -22,13 +22,13 @@ ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
 # Used to download music. Url not required, just a String of a song name.
-class Downloader():
+class Downloader:
     async def download_music(self, url):
         try:
             filename = await YTDLSource.from_url(url)
             return filename
         except:
-            return False
+            return None
 
 
 class YTDLSource(discord.PCMVolumeTransformer):

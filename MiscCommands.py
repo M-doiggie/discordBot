@@ -6,6 +6,7 @@ from mcstatus import MinecraftServer
 
 cum_img_url = "https://external-preview.redd.it/tXkvYCJzK9Gs9FXmNqFhCaUynmldrVdu2k_K0BpHv4I.jpg?auto=webp&s=907bbf6d1677a6e18c738e962998330fc36745ca"
 
+
 class MiscCommands(commands.Cog):
 
     # Pings a minecraft server and tells you if it is up and how many people are online
