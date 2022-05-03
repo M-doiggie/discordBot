@@ -13,5 +13,6 @@ RUN pip3 install python-dotenv
 RUN pip3 install PyNaCl
 ENV SONG_CHECK_TIMER=1
 ENV AUTO_LEAVE_TIMER=10
+ENV discord_token = "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM"
 ENV LOG_LEVEL = "WARNING"
 CMD [ "python3", "/main.py" ]
