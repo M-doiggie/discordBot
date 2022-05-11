@@ -3,7 +3,10 @@ ENV TZ=Europe/London
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt update
 RUN apt install -y tzdata
-RUN apt-get -y install python3.8
+RUN apt-get update
+
+#install python stuff
+RUN apt-get -y install python3.9
 RUN apt-get -y install python3-pip
 RUN apt -y install ffmpeg
 RUN pip3 install discord.py 
@@ -11,8 +14,19 @@ RUN pip3 install mcstatus
 RUN pip3 install youtube_dl
 RUN pip3 install python-dotenv 
 RUN pip3 install PyNaCl
+RUN pip3 install spotipy
+
+#enviroment
 ENV SONG_CHECK_TIMER=1
 ENV AUTO_LEAVE_TIMER=10
-ENV discord_token = "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM"
-ENV LOG_LEVEL = "WARNING"
-CMD [ "python3", "/main.py" ]
+#ENV discord_token = "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM"
+ENV LOG_LEVEL "WARNING"
+CMD mkdir /musicbot
+WORKDIR /musicbot
+COPY main.py ./
+COPY Downloader.py ./
+COPY MiscCommands.py ./
+COPY MusicCommands.py ./
+COPY TestTimeKeeperCommands.py ./
+COPY TimeKeeperCommands.py ./
+CMD [ "python3", "main.py" ]
