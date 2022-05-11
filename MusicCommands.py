@@ -198,7 +198,11 @@ class MusicCommands(commands.Cog):
             if filename is None:
                 if ctx is not None:
                     failedDownloadEmbed = discord.Embed(title="Failed Song")
-                    failedDownloadEmbed.url = url
+                    LOGGER.error("Url of failed song: {0}".format(url))
+                    if 'http' or 'https' in url:
+                        failedDownloadEmbed.url = url
+                    else:
+                        failedDownloadEmbed.add_field(name="Url: ", value=url)
                     failedDownloadEmbed.description = "Failed to download due to Youtube"
                     await ctx.send(embed=failedDownloadEmbed)
                 LOGGER.error("File was not able to be downloaded: {0}".format(url))

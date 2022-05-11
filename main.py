@@ -13,12 +13,11 @@ import TimeKeeperCommands
 # Mr botty token
 # DISCORD_TOKEN = "ODE4NTYzNjQyMzcwNTU1OTM1.YEZ4zA.jP_pHO6v8rKcECr4hmVYfdbSM0E"
 # test token
-# DISCORD_TOKEN = "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM"
+DISCORD_TOKEN = "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM"
 
 # used to retirve token from environment, allows for docker to have multipe bot instances for multiple server if required
-DISCORD_TOKEN = os.getenv("discord_token", "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM")
+# DISCORD_TOKEN = os.getenv("discord_token", "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD_6i4qSjuhkOPvB4vMB08hsM")
 pref = os.getenv("prefix", '!')
-birdy_uri = ''
 
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
