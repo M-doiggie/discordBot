@@ -1,7 +1,11 @@
 import asyncio
+import logging
 
 import discord
 import youtube_dl
+from youtube_dl import DownloadError
+
+LOGGER = logging.getLogger(__name__)
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 ytdl_format_options = {
@@ -25,8 +29,9 @@ class Downloader:
         try:
             filename = await YTDLSource.from_url(url)
             return filename
-        except:
-            return None
+        except DownloadError as ex:
+            LOGGER.warning("File failed to download: {0} caused Exception: {1}".format(url, str(ex)))
+            return
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
