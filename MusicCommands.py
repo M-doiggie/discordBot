@@ -21,6 +21,7 @@ scope = "user-top-read"
 sp = spotipy.Spotify(
     client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
 
+currentSong = None
 toDownloadList = Queue(maxsize=0)
 toPlayList = Queue(maxsize=0)
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "WARNING"))
@@ -31,8 +32,6 @@ AUTO_LEAVE_TIMER = float(os.getenv("AUTO_LEAVE_TIMER", 10))
 
 
 class MusicCommands(commands.Cog):
-    # Local Music Variables
-    currentSong = None
 
     # Gets the bot to join the same voice channel as the author of the message
     @commands.command(name='join', help='Tells the bot to join the voice channel')
@@ -44,9 +43,12 @@ class MusicCommands(commands.Cog):
             channel = ctx.message.author.voice.channel
         try:
             await channel.connect()
-            self.check_music.start(ctx)
-            self.check_downloads.start(ctx)
-            self.auto_leave.start(ctx)
+            if not self.check_downloads.is_running():
+                self.check_music.start(ctx)
+            if not self.check_downloads.is_running():
+                self.check_downloads.start(ctx)
+            if not self.auto_leave.is_running():
+                self.auto_leave.start(ctx)
             LOGGER.warning("Successfully joined: '{0}'".format(channel))
         except Exception as e:
             await ctx.send("Bot unable to connect to " + str(channel))
@@ -91,15 +93,19 @@ class MusicCommands(commands.Cog):
     async def skip(self, ctx):
         server = ctx.message.guild
         voice_channel = server.voice_client
-        filename = toPlayList.get(0)
-        try:
-            if not os.path.exists(filename):
-                voice_channel.stop()
-                voice_channel.play(discord.FFmpegPCMAudio(source=filename), after=lambda e: self.deleteSong(filename))
-                await ctx.send("Not yet implemented.")
-                return
-        except Exception as e:
-            LOGGER.error("An Exception was caught trying to play a song: '{0}'".format(e))
+        if toPlayList.qsize() == 0:
+            filename = None
+            voice_channel.stop()
+            return
+        else:
+            filename = toPlayList.get()
+            try:
+                if os.path.exists(filename):
+                    voice_channel.stop()
+                    voice_channel.play(discord.FFmpegPCMAudio(source=filename), after=lambda e: self.deleteSong(filename))
+                    return
+            except Exception as e:
+                LOGGER.error("An Exception was caught trying to play a song: '{0}'".format(e))
 
     # Tells the user the current song playing.
     @commands.command(name='song', help='Get the name of the current song')
