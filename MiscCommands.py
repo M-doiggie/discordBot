@@ -1,10 +1,12 @@
+import os
 import random
 
 import discord
 from discord.ext import commands
-from mcstatus import MinecraftServer
+from mcstatus import JavaServer
 
 cum_img_url = "https://external-preview.redd.it/tXkvYCJzK9Gs9FXmNqFhCaUynmldrVdu2k_K0BpHv4I.jpg?auto=webp&s=907bbf6d1677a6e18c738e962998330fc36745ca"
+SERVER_TOKEN = os.getenv("mc_server_token", "gallafent.duckdns.org")
 
 
 class MiscCommands(commands.Cog):
@@ -13,7 +15,7 @@ class MiscCommands(commands.Cog):
     @commands.command(name="status", help="Tells you the status of the minecraft server...if it is still alive")
     async def sendMCServerStatus(self, ctx):
         await ctx.channel.send("This might take a minute.")
-        server = MinecraftServer.lookup("gallafent.duckdns.org")
+        server = JavaServer.lookup(SERVER_TOKEN)
         status = server.status()
 
         await ctx.channel.send(f"The Minecraft server has {status.players.online} players on right now. "
