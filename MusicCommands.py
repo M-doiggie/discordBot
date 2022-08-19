@@ -10,6 +10,8 @@ import discord
 import spotipy
 from discord.ext import commands, tasks
 from spotipy.oauth2 import SpotifyClientCredentials
+from pytube import Playlist, Stream
+import threading
 
 # Spotify Variables
 from Downloader import Downloader
@@ -70,23 +72,41 @@ class MusicCommands(commands.Cog):
         if voice_client is None:
             await self.join(ctx)
         if "spotify" in url:
-            LOGGER.warning("Spotify Url being deciphered.")
-            if "album" in url:
-                album_response = sp.album_tracks(url, limit=50, market=None)
-                results = album_response["items"]
-                for result in results:
-                    toDownloadList.put(result['name'] + " by " + result['artists'][0]['name'])
-            if "playlist" in url:
-                response = sp.playlist_tracks(url, fields=None, limit=100, market=None)
-                results = response["items"]
-                for result in results:
-                    toDownloadList.put(result['track']['name'] + " by " + result['track']['artists'][0]['name'])
-            if "track" in url:
-                track_response = sp.track(url, market=None)
-                toDownloadList.put(track_response['name'] + " by " + track_response['artists'][0]['name'])
+            await self.parseSpotify(url)
+        elif "youtube" in url and "playlist" in url:
+            th = threading.Thread(target=self.parseYoutubePlaylists, args=(url,))
+            th.start()
         else:
             toDownloadList.put(url)
         LOGGER.warning("Current size of Download List: '{0}'".format(toDownloadList.qsize()))
+
+    def parseSpotify(self, url):
+        LOGGER.warning("Spotify Url being deciphered.")
+        if "album" in url:
+            album_response = sp.album_tracks(url, limit=50, market=None)
+            results = album_response["items"]
+            for result in results:
+                toDownloadList.put(result['name'] + " by " + result['artists'][0]['name'])
+        if "playlist" in url:
+            response = sp.playlist_tracks(url, fields=None, limit=100, market=None)
+            results = response["items"]
+            for result in results:
+                toDownloadList.put(result['track']['name'] + " by " + result['track']['artists'][0]['name'])
+        if "track" in url:
+            track_response = sp.track(url, market=None)
+            toDownloadList.put(track_response['name'] + " by " + track_response['artists'][0]['name'])
+
+    def parseYoutubePlaylists(self, url):
+        playlist = Playlist(url)
+        playlist._video_regex = re.compile(r"\"url\":\"(/watch\?v=[\w-]*)")
+
+        for url in playlist.video_urls:
+            print(url)
+
+        for video in playlist.videos:
+            audioStream = video.streams.get_by_itag(140)
+            toDownloadList.put(audioStream)
+
 
     # Skips the current song, will throw a little error
     @commands.command(name='skip', help='Skips the current song')
@@ -200,22 +220,27 @@ class MusicCommands(commands.Cog):
         if not toDownloadList.empty():
             url = toDownloadList.get()
             LOGGER.warning("Trying to download url: {0}".format(url))
-            filename = await Downloader.download_music(None, url)
-            if filename is None:
-                if ctx is not None:
-                    failedDownloadEmbed = discord.Embed(title="Failed Song")
-                    LOGGER.error("Url of failed song: {0}".format(url))
-                    if 'http' in url or 'https' in url:
-                        failedDownloadEmbed.url = url
-                    else:
-                        failedDownloadEmbed.add_field(name="File: ", value=url)
-                    failedDownloadEmbed.description = "Failed to download due to Youtube"
-                    await ctx.send(embed=failedDownloadEmbed)
-                LOGGER.error("File was not able to be downloaded: {0}".format(url))
-                await self.check_downloads(ctx)
-            else:
+            if isinstance(url, Stream):
+                filename = url.download(output_path='C:\Productive\Projects\Python\discordBot\\').split("\\")[-1]
                 toPlayList.put(filename)
-                LOGGER.warning("File: {0} was downloaded".format(filename))
+                return
+            else:
+                filename = await Downloader.download_music(None, url)
+                if filename is None:
+                    if ctx is not None:
+                        failedDownloadEmbed = discord.Embed(title="Failed Song")
+                        LOGGER.error("Url of failed song: {0}".format(url))
+                        if 'http' in url or 'https' in url:
+                            failedDownloadEmbed.url = url
+                        else:
+                            failedDownloadEmbed.add_field(name="File: ", value=url)
+                        failedDownloadEmbed.description = "Failed to download due to Youtube"
+                        await ctx.send(embed=failedDownloadEmbed)
+                    LOGGER.error("File was not able to be downloaded: {0}".format(url))
+                    await self.check_downloads(ctx)
+                else:
+                    toPlayList.put(filename)
+                    LOGGER.warning("File: {0} was downloaded".format(filename))
 
     @tasks.loop(seconds=10)
     async def auto_leave(self, ctx):
