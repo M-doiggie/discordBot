@@ -109,7 +109,7 @@ class MusicCommands(commands.Cog):
             audioStream = video.streams.get_by_itag(140)
             toDownloadList.put(audioStream)
 
-    def parseYotubeSingle(self, url):
+    def parseYoutubeSingle(self, url):
         singleSong = YouTube(url)
         toDownloadList.put(singleSong.streams.get_by_itag(140))
 
