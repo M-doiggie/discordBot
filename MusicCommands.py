@@ -10,7 +10,7 @@ import discord
 import spotipy
 from discord.ext import commands, tasks
 from spotipy.oauth2 import SpotifyClientCredentials
-from pytube import Playlist, Stream
+from pytube import Playlist, Stream, YouTube
 import threading
 
 # Spotify Variables
@@ -76,6 +76,8 @@ class MusicCommands(commands.Cog):
         elif "youtube" in url and "playlist" in url:
             th = threading.Thread(target=self.parseYoutubePlaylists, args=(url,))
             th.start()
+        elif "youtube" in url:
+            self.parseYotubeSingle(url)
         else:
             toDownloadList.put(url)
         LOGGER.warning("Current size of Download List: '{0}'".format(toDownloadList.qsize()))
@@ -107,6 +109,9 @@ class MusicCommands(commands.Cog):
             audioStream = video.streams.get_by_itag(140)
             toDownloadList.put(audioStream)
 
+    def parseYotubeSingle(self, url):
+        singleSong = YouTube(url)
+        toDownloadList.put(singleSong.streams.get_by_itag(140))
 
     # Skips the current song, will throw a little error
     @commands.command(name='skip', help='Skips the current song')
