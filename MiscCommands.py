@@ -6,6 +6,7 @@ from discord.ext import commands
 from mcstatus import JavaServer
 
 cum_img_url = "https://external-preview.redd.it/tXkvYCJzK9Gs9FXmNqFhCaUynmldrVdu2k_K0BpHv4I.jpg?auto=webp&s=907bbf6d1677a6e18c738e962998330fc36745ca"
+ping_gif_url = "https://i.postimg.cc/T1WY4PCg/MISSING.gif"
 SERVER_TOKEN = os.getenv("mc_server_token", "gallafent.duckdns.org")
 
 
@@ -34,4 +35,11 @@ class MiscCommands(commands.Cog):
         embedMessage = discord.Embed(title="Silence Wench")
         embedMessage.description = "I do not wish to be horny anymore."
         embedMessage.set_image(url=cum_img_url)
+        await ctx.channel.send(embed=embedMessage)
+
+    @commands.command(name="flame", help="League of legends question mark ping")
+    async def sendFlame(self, ctx):
+        embedMessage = discord.Embed(title="Jungle Diff")
+        embedMessage.description = "It's fine, we scale"
+        embedMessage.set_image(url=ping_gif_url)
         await ctx.channel.send(embed=embedMessage)
