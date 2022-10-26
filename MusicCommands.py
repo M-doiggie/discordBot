@@ -15,6 +15,7 @@ import threading
 
 # Spotify Variables
 from Downloader import Downloader
+from Strings import Strings
 
 client_id = "384291e4cdab4faea3f4517b61a89eb5"
 client_secret = "0457b50cefe449998af10aa8707be247"
@@ -53,7 +54,7 @@ class MusicCommands(commands.Cog):
                 self.auto_leave.start(ctx)
             LOGGER.warning("Successfully joined: '{0}'".format(channel))
         except Exception as e:
-            await ctx.send("Bot unable to connect to " + str(channel))
+            await ctx.send(Strings.unable_to_connect.value + str(channel))
             LOGGER.error("Trying to join Channel: '{0}' caused the following exception: '{1}'".format(channel, e))
 
     # Gets the bot to leave the voice channel that it is currently in.
@@ -137,9 +138,9 @@ class MusicCommands(commands.Cog):
     async def get_song(self, ctx):
         global currentSong
         if currentSong is not None:
-            await ctx.send("Currently playing: " + currentSong)
+            await ctx.send(Strings.current_playing.value + currentSong)
         else:
-            await ctx.send("No Song currently playing")
+            await ctx.send(Strings.no_song_playing.value)
 
     # Tells the user the list of songs queued up to play.
     @commands.command(name='queue', help='Prints the current queued songs.')
