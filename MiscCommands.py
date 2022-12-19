@@ -32,14 +32,14 @@ class MiscCommands(commands.Cog):
 
     @commands.command(name="cum", help="Silence wench, I do not wish to be horny anymore")
     async def sendCum(self, ctx):
-        embedMessage = discord.Embed(title=Strings.silence_wench_title)
+        embedMessage = discord.Embed(title=Strings.silence_wench_title.value)
         embedMessage.description = Strings.silence_wench_description.value
         embedMessage.set_image(url=Strings.cum_img_url.value)
         await ctx.channel.send(embed=embedMessage)
 
     @commands.command(name="flame", help="League of legends question mark ping")
     async def sendFlame(self, ctx):
-        embedMessage = discord.Embed(title=Strings.flame_league_title)
-        embedMessage.description = Strings.flame_league_description
+        embedMessage = discord.Embed(title=Strings.flame_league_title.value)
+        embedMessage.description = Strings.flame_league_description.value
         embedMessage.set_image(url=Strings.ping_gif_url.value)
         await ctx.channel.send(embed=embedMessage)

@@ -11,3 +11,5 @@ class Strings(Enum):
     silence_wench_title = "Silence Wench"
     flame_league_title = "Jungle Diff"
     flame_league_description = "It's fine, we scale"
+    current_playing_name_label = "Name: "
+    current_playing_length_label = "Length: "
