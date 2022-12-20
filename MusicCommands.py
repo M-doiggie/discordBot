@@ -124,7 +124,6 @@ class MusicCommands(commands.Cog):
         server = ctx.message.guild
         voice_channel = server.voice_client
         if toPlayList.qsize() == 0:
-            filename = None
             voice_channel.stop()
             return
         else:
@@ -133,7 +132,6 @@ class MusicCommands(commands.Cog):
                 if os.path.exists(currentSongTuple[0]):
                     voice_channel.stop()
                     # Need to the get key from the tuple
-
                     voice_channel.play(discord.FFmpegPCMAudio(source=currentSongTuple[0]), after=lambda e: self.deleteSong(currentSongTuple[0]))
                     return
             except Exception as e:
@@ -149,6 +147,18 @@ class MusicCommands(commands.Cog):
             await ctx.channel.send(embed=embedMessage)
         else:
             await ctx.send(Strings.no_song_playing.value)
+
+    @commands.command(name='clear', help='Clears the current queued songs.')
+    async def clearQueue(self, ctx):
+        global toPlayList, toDownloadList
+        if toPlayList.qsize() > 0:
+            for song in toPlayList.queue:
+                self.deleteSong(song[0])
+            toPlayList = Queue(maxsize=0)
+        if toDownloadList.qsize() > 0:
+            toDownloadList = Queue(maxsize=0)
+
+        await ctx.send("Queue has been cleared")
 
     # Tells the user the list of songs queued up to play.
     @commands.command(name='queue', help='Prints the current queued songs.')
@@ -197,9 +207,9 @@ class MusicCommands(commands.Cog):
             counter += 1
 
         await ctx.send(embed=embedMessage)
-
     # Checks if there are any songs in the toPlayQueue, then plays them if no song is currently playing
     # Called after Play is called.
+
     @add_to_queue.after_invoke
     async def check_playing(self, ctx):
         global currentSong
@@ -212,6 +222,7 @@ class MusicCommands(commands.Cog):
                 song_name = filename[0]
                 if not os.path.exists(song_name) or "Video Not Available" in song_name:
                     LOGGER.error("The song: {0} does not exist locally.".format(song_name))
+                    self.deleteSong(song_name)
                     return None
                 currentSong = filename
                 audio_source = discord.FFmpegPCMAudio(source=song_name)
@@ -220,8 +231,8 @@ class MusicCommands(commands.Cog):
                 await ctx.send('**Now playing:** {}'.format(filename))
         except Exception as e:
             LOGGER.error("An Exception occurred when trying to play music, Exception: {0}".format(e))
-
     # A method which is called every 3 seconds. To check if a song needs to be played from the toPlayQueue
+
     @tasks.loop(seconds=SONG_TIMER)
     async def check_music(self, ctx):
         if ctx is not None:
@@ -229,8 +240,8 @@ class MusicCommands(commands.Cog):
             if voice_client is not None and voice_client.is_connected():
                 if not voice_client.is_playing():
                     await self.check_playing(ctx)
-
     # A method which is called every 3 seconds, to check if a song needs to be downloaded
+
     @tasks.loop(seconds=SONG_TIMER)
     async def check_downloads(self, ctx):
         if not toDownloadList.empty():
@@ -267,18 +278,19 @@ class MusicCommands(commands.Cog):
         voice_client = ctx.message.guild.voice_client
         if voice_client is not None and len(voice_client.channel.members) == 1 and voice_client.is_connected:
             await voice_client.disconnect()
+            await self.clearQueue(ctx)
             LOGGER.warning("Bot left voice call due to being alone")
 
-    # Deletes song files
     @staticmethod
     def deleteSong(filename):
         try:
             os.remove(filename)
             LOGGER.warning("A Song was deleted: {0}".format(filename))
         except OSError as OSE:
-            pass
+            LOGGER.error("There was an issue deleting: {0}".format(filename))
+            LOGGER.error("Deletion Exception: " + OSE)
 
     def toStringSong(self, song_tuple):
         return Strings.current_playing_name_label.value + str(song_tuple[0]) \
                + "\n" + Strings.current_playing_length_label.value + str(
-                    datetime.timedelta(seconds=song_tuple[1]))
+            datetime.timedelta(seconds=song_tuple[1]))
