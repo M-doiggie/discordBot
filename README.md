@@ -6,3 +6,5 @@ This is a Discord bot which can play music from the following methods:
 
 TODO:
     Make it does that it only downloads audio files only for the regular youtube links and spotify songs.
+    Current Song progress!
+    

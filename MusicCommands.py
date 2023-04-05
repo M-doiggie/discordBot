@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import re
@@ -15,6 +16,7 @@ import threading
 
 # Spotify Variables
 from Downloader import Downloader
+from Strings import Strings
 
 client_id = "384291e4cdab4faea3f4517b61a89eb5"
 client_secret = "0457b50cefe449998af10aa8707be247"
@@ -53,7 +55,7 @@ class MusicCommands(commands.Cog):
                 self.auto_leave.start(ctx)
             LOGGER.warning("Successfully joined: '{0}'".format(channel))
         except Exception as e:
-            await ctx.send("Bot unable to connect to " + str(channel))
+            await ctx.send(Strings.unable_to_connect.value + str(channel))
             LOGGER.error("Trying to join Channel: '{0}' caused the following exception: '{1}'".format(channel, e))
 
     # Gets the bot to leave the voice channel that it is currently in.
@@ -65,19 +67,19 @@ class MusicCommands(commands.Cog):
             toDownloadList.empty()
 
     # Adds a song to the download list
-    # Accepts youtube urls, song names, spotify platlist/album urls.
+    # Accepts youtube urls, song names, spotify playlist/album urls.
     @commands.command(name='play', help='To play song', aliases=['p', 'play_song'])
     async def add_to_queue(self, ctx, *, url):
         voice_client = ctx.message.guild.voice_client
         if voice_client is None:
             await self.join(ctx)
         if "spotify" in url:
-            await self.parseSpotify(url)
+            self.parseSpotify(url)
         elif "youtube" in url and "playlist" in url:
             th = threading.Thread(target=self.parseYoutubePlaylists, args=(url,))
             th.start()
         elif "youtube" in url:
-            self.parseYotubeSingle(url)
+            self.parseYoutubeSingle(url)
         else:
             toDownloadList.put(url)
         LOGGER.warning("Current size of Download List: '{0}'".format(toDownloadList.qsize()))
@@ -106,12 +108,15 @@ class MusicCommands(commands.Cog):
             print(url)
 
         for video in playlist.videos:
-            audioStream = video.streams.get_by_itag(140)
-            toDownloadList.put(audioStream)
+            self.parseYoutubeSingle(video)
 
     def parseYoutubeSingle(self, url):
-        singleSong = YouTube(url)
-        toDownloadList.put(singleSong.streams.get_by_itag(140))
+        if isinstance(url, YouTube):
+            toDownloadList.put(url)
+        else:
+            singleSong = YouTube(url)
+            toDownloadList.put(singleSong)
+        # toDownloadList.put(singleSong.streams.get_by_itag(140))
 
     # Skips the current song, will throw a little error
     @commands.command(name='skip', help='Skips the current song')
@@ -119,15 +124,16 @@ class MusicCommands(commands.Cog):
         server = ctx.message.guild
         voice_channel = server.voice_client
         if toPlayList.qsize() == 0:
-            filename = None
             voice_channel.stop()
             return
         else:
-            filename = toPlayList.get()
+            currentSongTuple = toPlayList.get()
             try:
-                if os.path.exists(filename):
+                if os.path.exists(currentSongTuple[0]):
                     voice_channel.stop()
-                    voice_channel.play(discord.FFmpegPCMAudio(source=filename), after=lambda e: self.deleteSong(filename))
+                    # Need to the get key from the tuple
+                    voice_channel.play(discord.FFmpegPCMAudio(source=currentSongTuple[0]),
+                                       after=lambda e: self.deleteSong(currentSongTuple[0]))
                     return
             except Exception as e:
                 LOGGER.error("An Exception was caught trying to play a song: '{0}'".format(e))
@@ -137,9 +143,23 @@ class MusicCommands(commands.Cog):
     async def get_song(self, ctx):
         global currentSong
         if currentSong is not None:
-            await ctx.send("Currently playing: " + currentSong)
+            embedMessage = discord.Embed(title=Strings.current_playing.value)
+            embedMessage.description = self.toStringSong(currentSong)
+            await ctx.channel.send(embed=embedMessage)
         else:
-            await ctx.send("No Song currently playing")
+            await ctx.send(Strings.no_song_playing.value)
+
+    @commands.command(name='clear', help='Clears the current queued songs.')
+    async def clearQueue(self, ctx):
+        global toPlayList, toDownloadList
+        if toPlayList.qsize() > 0:
+            for song in toPlayList.queue:
+                self.deleteSong(song[0])
+            toPlayList = Queue(maxsize=0)
+        if toDownloadList.qsize() > 0:
+            toDownloadList = Queue(maxsize=0)
+
+        await ctx.send("Queue has been cleared")
 
     # Tells the user the list of songs queued up to play.
     @commands.command(name='queue', help='Prints the current queued songs.')
@@ -184,13 +204,14 @@ class MusicCommands(commands.Cog):
                 # Put it into the embedded message
                 embedMessage.add_field(name=counter, value=data['title'], inline=False)
             else:
-                embedMessage.add_field(name=counter, value=str(item), inline=False)
+                embedMessage.add_field(name=counter, value=self.toStringSong(item), inline=False)
             counter += 1
 
         await ctx.send(embed=embedMessage)
 
     # Checks if there are any songs in the toPlayQueue, then plays them if no song is currently playing
     # Called after Play is called.
+
     @add_to_queue.after_invoke
     async def check_playing(self, ctx):
         global currentSong
@@ -199,18 +220,22 @@ class MusicCommands(commands.Cog):
             server = ctx.message.guild
             voice_channel = server.voice_client
             if not voice_client.is_playing() and toPlayList.qsize() > 0:
-                filename = toPlayList.get(0)
-                if not os.path.exists(filename):
-                    LOGGER.error("The song: {0} does not exist locally.".format(filename))
+                filename = toPlayList.get()
+                song_name = filename[0]
+                if not os.path.exists(song_name) or "Video Not Available" in song_name:
+                    LOGGER.error("The song: {0} does not exist locally.".format(song_name))
+                    self.deleteSong(song_name)
                     return None
                 currentSong = filename
-                voice_channel.play(discord.FFmpegPCMAudio(source=filename), after=lambda e: self.deleteSong(filename))
+                audio_source = discord.FFmpegPCMAudio(source=song_name)
+                voice_channel.play(audio_source, after=lambda e: self.deleteSong(song_name))
                 LOGGER.warning("Playing Song: {0}".format(filename))
                 await ctx.send('**Now playing:** {}'.format(filename))
         except Exception as e:
             LOGGER.error("An Exception occurred when trying to play music, Exception: {0}".format(e))
 
     # A method which is called every 3 seconds. To check if a song needs to be played from the toPlayQueue
+
     @tasks.loop(seconds=SONG_TIMER)
     async def check_music(self, ctx):
         if ctx is not None:
@@ -220,14 +245,17 @@ class MusicCommands(commands.Cog):
                     await self.check_playing(ctx)
 
     # A method which is called every 3 seconds, to check if a song needs to be downloaded
+
     @tasks.loop(seconds=SONG_TIMER)
     async def check_downloads(self, ctx):
         if not toDownloadList.empty():
             url = toDownloadList.get()
             LOGGER.warning("Trying to download url: {0}".format(url))
-            if isinstance(url, Stream):
-                filename = url.download(output_path='C:\Productive\Projects\Python\discordBot\\').split("\\")[-1]
-                toPlayList.put(filename)
+            if isinstance(url, YouTube):
+                filename = \
+                url.streams.get_by_itag(140).download(output_path='C:\Productive\Projects\Python\discordBot\\').split(
+                    "\\")[-1]
+                self.addToPlaylist(filename, url.length)
                 return
             else:
                 filename = await Downloader.download_music(None, url)
@@ -244,21 +272,31 @@ class MusicCommands(commands.Cog):
                     LOGGER.error("File was not able to be downloaded: {0}".format(url))
                     await self.check_downloads(ctx)
                 else:
-                    toPlayList.put(filename)
+                    self.addToPlaylist(filename, "n/a")
                     LOGGER.warning("File: {0} was downloaded".format(filename))
+
+    def addToPlaylist(self, filename, length):
+        fileInfo = (filename, length)
+        toPlayList.put(fileInfo)
 
     @tasks.loop(seconds=10)
     async def auto_leave(self, ctx):
         voice_client = ctx.message.guild.voice_client
         if voice_client is not None and len(voice_client.channel.members) == 1 and voice_client.is_connected:
             await voice_client.disconnect()
+            await self.clearQueue(ctx)
             LOGGER.warning("Bot left voice call due to being alone")
 
-    # Deletes song files
     @staticmethod
     def deleteSong(filename):
         try:
             os.remove(filename)
             LOGGER.warning("A Song was deleted: {0}".format(filename))
         except OSError as OSE:
-            pass
+            LOGGER.error("There was an issue deleting: {0}".format(filename))
+            LOGGER.error("Deletion Exception: " + OSE)
+
+    def toStringSong(self, song_tuple):
+        return Strings.current_playing_name_label.value + str(song_tuple[0]) \
+               + "\n" + Strings.current_playing_length_label.value + str(
+            datetime.timedelta(seconds=song_tuple[1]))

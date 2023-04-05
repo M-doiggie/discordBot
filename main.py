@@ -20,7 +20,6 @@ DISCORD_TOKEN = os.getenv("discord_token", "OTE3MDU3NDQ5MTk2OTQxNDc1.YazKTQ.vyTD
 pref = os.getenv("prefix", '$')
 
 intents = discord.Intents().all()
-client = discord.Client(intents=intents)
 theBot = commands.Bot(command_prefix=pref, intents=intents)
 LOGGER = logging.getLogger(__name__)
 
